@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tarjimon</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tarjimon">
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--main:#2563eb;--line:#e5e7eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--line:#334155}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
+padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+main{max-width:640px;margin:0 auto;padding:14px 0}
+.head{display:flex;justify-content:space-between;align-items:center}
+h1{font-size:20px;margin:6px 0 14px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.lang{flex:1;text-align:center;background:var(--card);padding:12px;border-radius:12px;font-weight:600;border:1px solid var(--line)}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;color:var(--text)}
+#swap{background:var(--main);color:#fff;width:44px;height:44px;font-size:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+textarea,.out{width:100%;min-height:110px;border:0;outline:0;resize:none;background:transparent;color:var(--text);font:inherit;font-size:18px}
+.out{white-space:pre-wrap}
+.tools{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.tools button,.sm{background:var(--bg);padding:8px 12px;border:1px solid var(--line)}
+.primary{background:var(--main)!important;color:#fff!important}
+#go{width:100%;background:var(--main);color:#fff;padding:14px;font-size:17px;font-weight:600}
+.msg{color:var(--muted);font-size:13px;min-height:18px;margin-top:8px}
+.tag{font-size:12px;color:var(--muted);margin-bottom:4px}
+#sug{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#sug button{background:var(--bg);border:1px solid var(--line);padding:5px 10px;font-size:14px}
+#panel{display:none}
+#panel input[type=url]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin:6px 0}
+#panel h3{margin:14px 0 4px;font-size:15px}
+#panel p{margin:2px 0;color:var(--muted);font-size:13px}
+label{font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<div class="head"><h1>🌐 Tarjimon</h1><button class="sm" id="cfg">⚙️ Lug'at</button></div>
+
+<div id="panel" class="box">
+  <div><b id="count">Lug'at: 0 ta so'z</b></div>
+
+  <h3>1) Excel / CSV fayldan yuklash</h3>
+  <p>A ustun: inglizcha, B ustun: o'zbekcha.</p>
+  <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt" style="margin:6px 0;max-width:100%">
+  <div><label><input type="checkbox" id="append"> Mavjud lug'atga qo'shish (belgilanmasa, almashtiriladi)</label></div>
+
+  <h3>2) Google Sheets havolasi (tavsiya)</h3>
+  <p>Jadvalni o'zgartirsangiz, hamma telefonda avtomatik yangilanadi.</p>
+  <input type="url" id="sheet" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+  <div class="tools">
+    <button class="sm primary" id="saveSheet">Saqlash va yangilash</button>
+    <button class="sm" id="clearSheet">Havolani o'chirish</button>
+  </div>
+
+  <h3>3) Lug'atni tozalash</h3>
+  <button class="sm" id="wipe">🗑 Lug'atni o'chirish</button>
+  <div class="msg" id="cmsg"></div>
+</div>
+
+<div class="bar">
+  <div class="lang" id="fromLbl">O'zbek</div>
+  <button id="swap" title="Almashtirish">⇄</button>
+  <div class="lang" id="toLbl">English</div>
+</div>
+<div class="box">
+  <textarea id="src" placeholder="So'z yoki matnni yozing..."></textarea>
+  <div id="sug"></div>
+  <div class="tools"><button id="mic">🎤 Gapirish</button><button id="clr">✕ Tozalash</button></div>
+</div>
+<button id="go">Tarjima qilish</button>
+<div class="box" style="margin-top:12px">
+  <div class="tag" id="tag"></div>
+  <div class="out" id="out">Tarjima shu yerda chiqadi</div>
+  <div class="tools"><button id="spk">🔊 Eshitish</button><button id="cpy">📋 Nusxa</button></div>
+</div>
+<div class="msg" id="msg"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const L={uz:{n:"O'zbek",sr:"uz-UZ"},en:{n:"English",sr:"en-US"}};
+let from="uz",to="en",timer;
+
+/* ---------- saqlash (IndexedDB) ---------- */
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("tarjimon",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("kv");
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function kvGet(k){try{const d=await idb();return await new Promise(res=>{
+  const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined);});}catch(e){return undefined;}}
+async function kvSet(k,v){const d=await idb();return new Promise((res,rej)=>{
+  const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+
+/* ---------- lug'at ---------- */
+let pairs=[],enMap=new Map(),uzMap=new Map();
+const norm=s=>String(s).toLowerCase().replace(/[ʻʼ`’‘´]/g,"'").replace(/\s+/g," ").trim();
+function addTo(m,k,v){if(!k)return;const a=m.get(k)||[];if(!a.includes(v))a.push(v);m.set(k,a);}
+function build(){enMap=new Map();uzMap=new Map();
+  for(const [e,u] of pairs){addTo(enMap,norm(e),String(u).trim());addTo(uzMap,norm(u),String(e).trim());}
+  $("count").textContent="Lug'at: "+pairs.length+" ta so'z";}
+async function setPairs(p){pairs=p;build();await kvSet("pairs",p);}
+
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");const first=t.split("\n")[0]||"";
+  const d=[",",";","\t"].map(c=>[c,first.split(c).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c=='"')q=true;
+    else if(c===d){row.push(f);f="";}
+    else if(c=="\n"){row.push(f);rows.push(row);row=[];f="";}
+    else if(c!="\r")f+=c;}
+  if(f||row.length){row.push(f);rows.push(row);}
+  return rows;}
+function rowsToPairs(rows){
+  const heads=["english","inglizcha","ingliz","en","inglis"];
+  const out=[];
+  rows.forEach((r,i)=>{
+    const a=String(r[0]??"").trim(),b=String(r[1]??"").trim();
+    if(!a||!b)return;
+    if(i===0&&heads.includes(norm(a)))return;
+    out.push([a,b]);});
+  return out;}
+
+async function loadXLSXLib(){
+  if(window.XLSX)return;
+  await new Promise((ok,no)=>{const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=ok;s.onerror=()=>no(new Error("Excel kutubxonasi yuklanmadi (internet kerak)."));
+    document.head.appendChild(s);});}
+
+$("file").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $("cmsg").textContent="O'qilmoqda...";
+  try{
+    let rows;
+    if(/\.(csv|txt)$/i.test(f.name)){rows=parseCSV(await f.text());}
+    else{await loadXLSXLib();const wb=XLSX.read(await f.arrayBuffer());
+      rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});}
+    let p=rowsToPairs(rows);
+    if(!p.length)throw new Error("Hech narsa topilmadi. A va B ustunlarni tekshiring.");
+    if($("append").checked)p=pairs.concat(p);
+    await setPairs(p);
+    $("cmsg").textContent="✓ Yuklandi: "+p.length+" ta so'z.";
+  }catch(err){$("cmsg").textContent="Xato: "+err.message;}
+  e.target.value="";
+};
+
+async function syncSheet(showMsg){
+  const url=localStorage.getItem("sheetUrl");if(!url)return;
+  try{
+    const r=await fetch(url,{cache:"no-store"});
+    const p=rowsToPairs(parseCSV(await r.text()));
+    if(!p.length)throw new Error("Jadval bo'sh yoki havola noto'g'ri.");
+    await setPairs(p);
+    if(showMsg)$("cmsg").textContent="✓ Google Sheets'dan yangilandi: "+p.length+" ta so'z.";
+  }catch(err){if(showMsg)$("cmsg").textContent="Xato: "+err.message+" Havolani tekshiring.";}
+}
+$("saveSheet").onclick=()=>{const u=$("sheet").value.trim();
+  if(!u){$("cmsg").textContent="Havolani kiriting.";return;}
+  localStorage.setItem("sheetUrl",u);$("cmsg").textContent="Yuklanmoqda...";syncSheet(true);};
+$("clearSheet").onclick=()=>{localStorage.removeItem("sheetUrl");$("sheet").value="";$("cmsg").textContent="Havola o'chirildi.";};
+$("wipe").onclick=async()=>{if(confirm("Lug'atni to'liq o'chirasizmi?")){await setPairs([]);$("cmsg").textContent="Lug'at tozalandi.";}};
+$("cfg").onclick=()=>{const p=$("panel");p.style.display=p.style.display==="block"?"none":"block";};
+
+/* ---------- tarjima ---------- */
+function suggestions(q){
+  const box=$("sug");box.innerHTML="";
+  const k=norm(q);if(k.length<2)return;
+  const m=from==="en"?enMap:uzMap;let n=0;
+  for(const key of m.keys()){
+    if(key!==k&&key.startsWith(k)){
+      const b=document.createElement("button");b.textContent=key;
+      b.onclick=()=>{$("src").value=key;translate();};box.appendChild(b);
+      if(++n>=5)break;}}}
+
+async function translate(){
+  const q=$("src").value.trim();
+  $("tag").textContent="";
+  if(!q){$("out").textContent="";$("sug").innerHTML="";return;}
+  suggestions(q);
+  const hit=(from==="en"?enMap:uzMap).get(norm(q));
+  if(hit){$("out").textContent=hit.join("\n");$("tag").textContent="📖 Lug'atdan";$("msg").textContent="";return;}
+  $("msg").textContent="Tarjima qilinmoqda...";
+  try{
+    const r=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(q)+"&langpair="+from+"|"+to);
+    const d=await r.json();
+    $("out").textContent=d.responseData.translatedText;
+    $("tag").textContent="🌐 Internetdan";$("msg").textContent="";
+  }catch(e){$("msg").textContent="Lug'atda topilmadi, internet ham yo'q.";}
+}
+$("go").onclick=translate;
+$("src").oninput=()=>{clearTimeout(timer);timer=setTimeout(translate,500);};
+$("swap").onclick=()=>{[from,to]=[to,from];labels();translate();};
+function labels(){$("fromLbl").textContent=L[from].n;$("toLbl").textContent=L[to].n;}
+$("clr").onclick=()=>{$("src").value="";$("out").textContent="";$("sug").innerHTML="";$("tag").textContent="";};
+$("cpy").onclick=async()=>{try{await navigator.clipboard.writeText($("out").textContent);$("msg").textContent="Nusxa olindi ✓";}catch(e){}};
+$("spk").onclick=()=>{const u=new SpeechSynthesisUtterance($("out").textContent);u.lang=L[to].sr;speechSynthesis.cancel();speechSynthesis.speak(u);};
+$("mic").onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$("msg").textContent="Bu brauzerda ovoz yozish ishlamaydi. Klaviaturadagi 🎤 dan foydalaning.";return;}
+  const r=new SR();r.lang=L[from].sr;
+  r.onresult=e=>{$("src").value=e.results[0][0].transcript;translate();};
+  r.onerror=()=>$("msg").textContent="Mikrofon ishlamadi.";
+  r.start();$("msg").textContent="Tinglayapman...";};
+
+/* ---------- boshlash ---------- */
+(async()=>{
+  labels();
+  $("sheet").value=localStorage.getItem("sheetUrl")||"";
+  pairs=(await kvGet("pairs"))||[];build();
+  syncSheet(false);
+})();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
