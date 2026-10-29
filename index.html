@@ -42,7 +42,7 @@ label{font-size:14px}
 </head>
 <body>
 <main>
-<div class="head"><h1>🌐 Tarjimon</h1><button class="sm" id="cfg">⚙️ Lug'at</button></div>
+<div class="head"><h1 id="title">🌐 Tarjimon</h1><button class="sm" id="cfg" style="display:none">⚙️ Lug'at</button></div>
 
 <div id="panel" class="box">
   <div><b id="count">Lug'at: 0 ta so'z</b></div>
@@ -85,6 +85,10 @@ label{font-size:14px}
 </main>
 <script>
 const $=id=>document.getElementById(id);
+/* ====== EGASI SOZLAMALARI ====== */
+const SHEET_URL="";      // Google Sheets CSV havolasi (qo'shtirnoq ichiga qo'ying)
+const ADMIN_PIN="1234";  // O'zingizning PIN kodingiz (o'zgartiring!)
+/* =============================== */
 const L={uz:{n:"O'zbek",sr:"uz-UZ"},en:{n:"English",sr:"en-US"}};
 let from="uz",to="en",timer;
 
@@ -153,9 +157,10 @@ $("file").onchange=async e=>{
 };
 
 async function syncSheet(showMsg){
-  const url=localStorage.getItem("sheetUrl");if(!url)return;
+  const url=localStorage.getItem("sheetUrl")||SHEET_URL||"lugat.csv";
   try{
     const r=await fetch(url,{cache:"no-store"});
+    if(!r.ok)throw new Error("Lug'at topilmadi.");
     const p=rowsToPairs(parseCSV(await r.text()));
     if(!p.length)throw new Error("Jadval bo'sh yoki havola noto'g'ri.");
     await setPairs(p);
@@ -167,6 +172,9 @@ $("saveSheet").onclick=()=>{const u=$("sheet").value.trim();
   localStorage.setItem("sheetUrl",u);$("cmsg").textContent="Yuklanmoqda...";syncSheet(true);};
 $("clearSheet").onclick=()=>{localStorage.removeItem("sheetUrl");$("sheet").value="";$("cmsg").textContent="Havola o'chirildi.";};
 $("wipe").onclick=async()=>{if(confirm("Lug'atni to'liq o'chirasizmi?")){await setPairs([]);$("cmsg").textContent="Lug'at tozalandi.";}};
+let taps=0,tapT;
+$("title").onclick=()=>{taps++;clearTimeout(tapT);tapT=setTimeout(()=>taps=0,2000);
+  if(taps>=5){taps=0;if(prompt("PIN kodni kiriting:")===ADMIN_PIN){$("cfg").style.display="";$("panel").style.display="block";}}};
 $("cfg").onclick=()=>{const p=$("panel");p.style.display=p.style.display==="block"?"none":"block";};
 
 /* ---------- tarjima ---------- */
