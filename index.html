@@ -16,27 +16,35 @@ html{font-size:calc(16px * var(--fs,1))}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);
-  padding-top:env(safe-area-inset-top);padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  padding-top:env(safe-area-inset-top);padding-bottom:calc(72px + env(safe-area-inset-bottom))}
 button,input,select{font:inherit;color:var(--text)}
 button{cursor:pointer;border:0;border-radius:12px;background:none}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:680px;margin:0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 14px 6px;max-width:680px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 header h1{font-size:1.2rem;margin:0}
 #dirBtn{background:var(--main);color:#fff;padding:9px 14px;border-radius:20px;font-weight:600;font-size:.9rem}
 main{max-width:680px;margin:0 auto;padding:4px 14px 14px}
 .row{display:flex;gap:8px;align-items:center}
-.inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:1.1rem;outline:none}
+.inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:max(16px,1.1rem);outline:none}
 .inp:focus{border-color:var(--main)}
 .sq{width:48px;height:48px;background:var(--card);border:1px solid var(--line);font-size:1.2rem;flex:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}
 .w{font-weight:700;font-size:1.1rem}
-.t{margin-top:4px;font-size:1.05rem;line-height:1.45}
-.n{margin-top:4px;font-size:.85rem;color:var(--muted)}
+.t{margin-top:4px;font-size:1.05rem;line-height:1.5}
+.t1 small{color:var(--muted);font-size:.8rem}
+.tag{background:var(--soft);color:var(--main);font-size:.7rem;padding:2px 8px;border-radius:10px;margin-left:6px;white-space:nowrap}
 .acts{display:flex;gap:6px;margin-top:8px}
 .ib{background:var(--bg);border:1px solid var(--line);padding:6px 11px;font-size:1rem}
 .ib.on{color:#f59e0b}
 .hint,.cnt{color:var(--muted);font-size:.9rem;margin:12px 2px}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip{background:var(--soft);padding:7px 12px;border-radius:18px;font-size:.95rem}
+.chip{flex:none;white-space:nowrap;background:var(--soft);padding:7px 13px;border-radius:18px;font-size:.92rem}
+.chip.act{background:var(--main);color:#fff}
+.letters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.lt{min-width:40px;height:38px;background:var(--card);border:1px solid var(--line);font-weight:600;padding:0 10px}
+.lt.act{background:var(--main);color:#fff;border-color:var(--main)}
 .btn{background:var(--main);color:#fff;padding:12px 16px;font-weight:600;width:100%;margin-top:10px}
 .btn.sec{background:var(--card);color:var(--text);border:1px solid var(--line)}
 .sec-t{font-weight:700;margin:18px 2px 4px}
@@ -48,14 +56,14 @@ select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padd
 .tabs button{flex:1;padding:8px 2px 7px;font-size:.7rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:0}
 .tabs button span{font-size:1.35rem;line-height:1.2}
 .tabs button.act{color:var(--main);font-weight:700}
-#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:9px 16px;border-radius:20px;font-size:.9rem;z-index:20;opacity:0;transition:.2s;pointer-events:none;max-width:90%}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:9px 16px;border-radius:20px;font-size:.9rem;z-index:20;opacity:0;transition:.2s;pointer-events:none;max-width:90%}
 #toast.on{opacity:.95}
 </style>
 </head>
 <body>
 <header>
-  <h1>🌐 Tarjimon</h1>
-  <button id="dirBtn"></button>
+  <div class="top"><h1>🌐 Tarjimon</h1><button id="dirBtn"></button></div>
+  <div id="catBar" class="strip" hidden></div>
 </header>
 <main>
   <section class="view" id="v-search">
@@ -65,18 +73,16 @@ select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padd
     </div>
     <div id="results"></div>
   </section>
-
   <section class="view" id="v-list" hidden>
     <input class="inp" id="lf" type="search" placeholder="Lug'atdan qidirish..." autocomplete="off" style="width:100%">
+    <div class="letters" id="letters"></div>
     <div class="cnt" id="lcnt"></div>
     <div id="lres"></div>
   </section>
-
   <section class="view" id="v-fav" hidden><div id="fres"></div></section>
   <section class="view" id="v-hist" hidden><div id="hres"></div></section>
   <section class="view" id="v-set" hidden><div id="sres"></div></section>
 </main>
-
 <nav class="tabs">
   <button data-v="search"><span>🔍</span>Qidiruv</button>
   <button data-v="list"><span>📚</span>Lug'at</button>
@@ -94,10 +100,42 @@ const h=(t,a={},...c)=>{const e=document.createElement(t);
   c.flat().forEach(x=>{if(x!=null&&x!==false)e.append(x);});return e;};
 const ls=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
-let toastT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),1800);}
+let toastT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),1900);}
+
+/*LOGIC-START*/
+const CYR={"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo","ж":"j","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"x","ц":"ts","ч":"ch","ш":"sh","щ":"sh","ъ":"'","ы":"i","ь":"","э":"e","ю":"yu","я":"ya","ў":"o'","қ":"q","ғ":"g'","ҳ":"h"};
+const norm=s=>{s=String(s).toLowerCase();
+  if(/[а-яёўқғҳ]/.test(s))s=s.replace(/[а-яёўқғҳ]/g,c=>CYR[c]??c);
+  return s.replace(/[ʻʼ`’‘´]/g,"'").replace(/\s+/g," ").trim();};
+const coll=new Intl.Collator("en");
+let entries=[],maps={en:new Map(),uz:new Map()},keys={en:[],uz:[]},cats=[],catCount={},cat="";
+const other=d=>d==="en"?"uz":"en";
+function add(d,w,t,n,c){const k=norm(w);if(!k)return;let o=maps[d].get(k);
+  if(!o){o={w:String(w).trim(),items:[]};maps[d].set(k,o);}
+  if(!o.items.some(i=>i.t===t&&i.c===c))o.items.push({t,n,c});}
+function build(){
+  maps={en:new Map(),uz:new Map()};catCount={};
+  for(const x of entries){add("en",x.e,x.u,x.n,x.c);add("uz",x.u,x.e,x.n,x.c);catCount[x.c]=(catCount[x.c]||0)+1;}
+  cats=Object.keys(catCount);if(cat&&!cats.includes(cat))cat="";
+  for(const d of["en","uz"])keys[d]=[...maps[d].keys()].sort(coll.compare);}
+const has=o=>!cat||o.items.some(i=>i.c===cat);
+const visibleKeys=d=>keys[d].filter(k=>has(maps[d].get(k)));
+function letterOf(d,k){
+  if(d==="uz")for(const p of["o'","g'","sh","ch"])if(k.startsWith(p))return p[0].toUpperCase()+p[1];
+  const c=k[0];return c&&/\p{L}/u.test(c)?c.toUpperCase():"#";}
+function lettersOf(d,list){
+  return[...new Set(list.map(k=>letterOf(d,k)))].sort((a,b)=>a==="#"?1:b==="#"?-1:coll.compare(a,b));}
+function findKeys(d,q){
+  const k=norm(q),m=maps[d],ks=keys[d],out=[],seen=new Set();
+  if(!k)return out;
+  if(m.has(k)&&has(m.get(k))){out.push(k);seen.add(k);}
+  for(const x of ks){if(out.length>=60)break;if(!seen.has(x)&&x.startsWith(k)&&has(m.get(x))){out.push(x);seen.add(x);}}
+  for(const x of ks){if(out.length>=60)break;if(!seen.has(x)&&x.includes(k)&&has(m.get(x))){out.push(x);seen.add(x);}}
+  return out;}
+const itemsOf=o=>o.items.filter(i=>!cat||i.c===cat);
+/*LOGIC-END*/
 
 /*XLSX-START*/
-const norm=s=>String(s).toLowerCase().replace(/[ʻʼ`’‘´]/g,"'").replace(/\s+/g," ").trim();
 async function inflateRaw(u8){
   const s=new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
   return new Uint8Array(await new Response(s).arrayBuffer());}
@@ -121,22 +159,9 @@ const unesc=s=>s.replace(/&(#x?[0-9a-f]+|amp|lt|gt|quot|apos);/gi,(m,g)=>{
   if(g[0]==="#"){const c=g[1].toLowerCase()==="x"?parseInt(g.slice(2),16):parseInt(g.slice(1),10);return String.fromCodePoint(c);}
   return{amp:"&",lt:"<",gt:">",quot:'"',apos:"'"}[g.toLowerCase()];});
 function colIdx(ref){const m=/^([A-Z]+)/.exec(ref);let n=0;for(const ch of m[1])n=n*26+ch.charCodeAt(0)-64;return n-1;}
-async function readXlsx(buf){
-  const z=await unzip(buf);let path=null;
-  const wb=await z.get("xl/workbook.xml"),rels=await z.get("xl/_rels/workbook.xml.rels");
-  if(wb&&rels){
-    const m=/<sheet\b[^>]*?r:id="([^"]+)"/.exec(wb);
-    if(m)for(const rm of rels.matchAll(/<Relationship\b[^>]*>/g)){
-      if(rm[0].includes('Id="'+m[1]+'"')){const t=/Target="([^"]+)"/.exec(rm[0]);
-        if(t){let p=t[1].replace(/^\//,"");if(!p.startsWith("xl/"))p="xl/"+p;path=p;}}}}
-  if(!path||!z.names.includes(path))path=z.names.filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()[0];
-  if(!path)throw new Error("Varaq topilmadi");
-  const ss=[],sx=await z.get("xl/sharedStrings.xml");
-  if(sx)for(const m of sx.matchAll(/<si\b[^>]*?(?:\/>|>([\s\S]*?)<\/si>)/g)){
-    let t="";const body=(m[1]||"").replace(/<rPh\b[\s\S]*?<\/rPh>/g,"");
-    for(const tm of body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g))t+=tm[1];ss.push(unesc(t));}
-  const sh=await z.get(path),rows=[];
-  for(const rm of sh.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)){
+function parseSheet(xml,ss){
+  const rows=[];
+  for(const rm of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)){
     if(!rm[1])continue;const row=[];
     for(const cm of rm[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
       const at=cm[1],body=cm[2]||"",ref=/\br="([A-Z]+\d+)"/.exec(at),ty=/\bt="([^"]+)"/.exec(at);
@@ -147,13 +172,33 @@ async function readXlsx(buf){
       row[i]=val;}
     rows.push(row);}
   return rows;}
-function rowsToEntries(rows){
+async function readXlsx(buf){
+  const z=await unzip(buf);
+  const wb=await z.get("xl/workbook.xml"),rels=await z.get("xl/_rels/workbook.xml.rels"),rmap={};
+  if(rels)for(const m of rels.matchAll(/<Relationship\b[^>]*>/g)){
+    const id=/\bId="([^"]+)"/.exec(m[0]),t=/\bTarget="([^"]+)"/.exec(m[0]);
+    if(id&&t){let p=t[1].replace(/^\//,"");if(!p.startsWith("xl/"))p="xl/"+p;rmap[id[1]]=p;}}
+  let list=[];
+  if(wb)for(const m of wb.matchAll(/<sheet\b[^>]*>/g)){
+    const nm=/\bname="([^"]*)"/.exec(m[0]),id=/\br:id="([^"]+)"/.exec(m[0]);
+    if(nm&&id&&rmap[id[1]])list.push({name:unesc(nm[1]),path:rmap[id[1]]});}
+  list=list.filter(s=>z.names.includes(s.path));
+  if(!list.length)list=z.names.filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort().map((p,i)=>({name:"Lug'at "+(i+1),path:p}));
+  if(!list.length)throw new Error("Varaq topilmadi");
+  const ss=[],sx=await z.get("xl/sharedStrings.xml");
+  if(sx)for(const m of sx.matchAll(/<si\b[^>]*?(?:\/>|>([\s\S]*?)<\/si>)/g)){
+    let t="";const body=(m[1]||"").replace(/<rPh\b[\s\S]*?<\/rPh>/g,"");
+    for(const tm of body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g))t+=tm[1];ss.push(unesc(t));}
+  const out=[];
+  for(const s of list)out.push({name:s.name,rows:parseSheet(await z.get(s.path),ss)});
+  return out;}
+function rowsToEntries(rows,c){
   const out=[],heads=["english","inglizcha","ingliz","en"];let first=true;
   for(const r of rows){
     const e=String(r[0]??"").trim(),u=String(r[1]??"").trim(),n=String(r[2]??"").trim();
     if(!e&&!u)continue;
     if(first){first=false;if(heads.includes(norm(e)))continue;}
-    if(e&&u)out.push({e,u,n});}
+    if(e&&u)out.push({e,u,n,c:c||"Umumiy"});}
   return out;}
 /*XLSX-END*/
 
@@ -167,53 +212,33 @@ async function kvSet(k,v){try{const d=await idb();return await new Promise((res,
 
 /* ================= HOLAT ================= */
 const LN={en:"English",uz:"O'zbek"},LC={en:"en-US",uz:"uz-UZ"};
-const other=d=>d==="en"?"uz":"en";
-let entries=[],maps={en:new Map(),uz:new Map()},keys={en:[],uz:[]};
-let dir=ls("dir","uz"),favs=ls("favs",[]),hist=ls("hist",[]);
-let theme=ls("theme","auto"),fsz=ls("fsz",1);
-let dictInfo={time:0,src:"",err:""},cur="search",listShown=80,histT;
-
-function add(d,w,t,n){const k=norm(w);if(!k)return;let o=maps[d].get(k);
-  if(!o){o={w:w.trim(),t:[],n:[]};maps[d].set(k,o);}
-  if(!o.t.includes(t))o.t.push(t);if(n&&!o.n.includes(n))o.n.push(n);}
-function build(){
-  maps={en:new Map(),uz:new Map()};
-  for(const x of entries){add("en",x.e,x.u,x.n);add("uz",x.u,x.e,x.n);}
-  for(const d of["en","uz"])keys[d]=[...maps[d].keys()].sort((a,b)=>a.localeCompare(b));}
+let dir=ls("dir","uz"),favs=ls("favs",[]),hist=ls("hist",[]),theme=ls("theme","auto"),fsz=ls("fsz",1);
+cat=ls("cat","");
+let dictInfo={time:0,src:"",err:""},cur="search",listShown=80,letter="",histT;
 
 async function loadDict(manual){
-  let ok=false;
-  try{
-    const r=await fetch("lugat.xlsx?v="+Date.now(),{cache:"no-store"});
-    if(!r.ok)throw new Error("NOFILE");
-    const rows=await readXlsx(await r.arrayBuffer());
-    const data=rowsToEntries(rows);
-    if(!data.length)throw new Error("EMPTY");
-    entries=data;build();dictInfo={time:Date.now(),src:"fayl",err:""};ok=true;
-    await kvSet("dict",{data,time:dictInfo.time});
-  }catch(e){
-    if(e.message==="NOFILE"||e.name==="TypeError")dictInfo.err=entries.length?"":"lugat.xlsx fayli topilmadi yoki internet yo'q.";
-    else if(e.message==="EMPTY")dictInfo.err="lugat.xlsx bo'sh. A ustunga inglizcha, B ustunga o'zbekcha so'zlarni yozing.";
-    else dictInfo.err="Excel faylni o'qib bo'lmadi: "+e.message;
+  let buf=null,netFail=false,ok=false;
+  try{const r=await fetch("lugat.xlsx?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;buf=await r.arrayBuffer();}
+  catch(e){netFail=true;}
+  if(netFail){
+    dictInfo.err=entries.length?"":"lugat.xlsx fayli topilmadi yoki internet yo'q.";
     if(entries.length)dictInfo.src="saqlangan nusxa";
-  }
-  if(manual)toast(ok?"✓ Lug'at yangilandi: "+entries.length+" ta":(entries.length?"Yangilab bo'lmadi, saqlangan nusxa ishlatilmoqda":"Lug'at yuklanmadi"));
-  render();
-}
+  }else{
+    try{
+      let data=[];for(const s of await readXlsx(buf))data=data.concat(rowsToEntries(s.rows,s.name));
+      if(!data.length)throw new Error("EMPTY");
+      entries=data;build();dictInfo={time:Date.now(),src:"fayl",err:""};ok=true;
+      await kvSet("dict",{data,time:dictInfo.time});
+    }catch(e){
+      dictInfo.err=e.message==="EMPTY"?"lugat.xlsx bo'sh. A ustunga inglizcha, B ustunga o'zbekcha so'zlarni yozing.":"Excel faylni o'qib bo'lmadi: "+e.message;
+      if(entries.length)dictInfo.src="saqlangan nusxa";}}
+  if(manual)toast(ok?"✓ Lug'at yangilandi: "+entries.length+" ta qator":(entries.length?"Yangilab bo'lmadi, saqlangan nusxa ishlatilmoqda":"Lug'at yuklanmadi"));
+  render();}
 
-/* ================= QIDIRUV ================= */
-function findKeys(d,q){
-  const k=norm(q),m=maps[d],ks=keys[d],out=[],seen=new Set();
-  if(!k)return out;
-  if(m.has(k)){out.push(k);seen.add(k);}
-  for(const x of ks){if(out.length>=60)break;if(!seen.has(x)&&x.startsWith(k)){out.push(x);seen.add(x);}}
-  for(const x of ks){if(out.length>=60)break;if(!seen.has(x)&&x.includes(k)){out.push(x);seen.add(x);}}
-  return out;}
-
+/* ================= KARTA ================= */
 function speak(text,lang){try{const u=new SpeechSynthesisUtterance(text);u.lang=lang;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){toast("Ovoz ishlamadi");}}
-
 function card(d,k){
-  const o=maps[d].get(k),fk=d+":"+k;
+  const o=maps[d].get(k),fk=d+":"+k,its=itemsOf(o),showCat=cats.length>1&&!cat;
   const star=h("button",{class:"ib"+(favs.includes(fk)?" on":""),title:"Sevimli"},favs.includes(fk)?"★":"☆");
   star.onclick=()=>{const i=favs.indexOf(fk);
     if(i>=0){favs.splice(i,1);star.classList.remove("on");star.textContent="☆";}
@@ -221,38 +246,45 @@ function card(d,k){
     save("favs",favs);if(cur==="fav")renderFav();};
   return h("div",{class:"card"},
     h("div",{class:"w"},o.w),
-    h("div",{class:"t"},o.t.map(x=>h("div",{},x))),
-    o.n.length?h("div",{class:"n"},o.n.join(" · ")):null,
+    h("div",{class:"t"},its.map(i=>h("div",{class:"t1"},i.t,i.n?h("small",{}," · "+i.n):null,showCat?h("span",{class:"tag"},i.c):null))),
     h("div",{class:"acts"},
       h("button",{class:"ib",title:"Eshitish",onclick:()=>speak(o.w,LC[d])},"🔊"),
-      h("button",{class:"ib",title:"Nusxa",onclick:async()=>{try{await navigator.clipboard.writeText(o.w+" — "+o.t.join(", "));toast("Nusxa olindi ✓");}catch(e){}}},"📋"),
+      h("button",{class:"ib",title:"Nusxa",onclick:async()=>{try{await navigator.clipboard.writeText(o.w+" — "+[...new Set(its.map(i=>i.t))].join(", "));toast("Nusxa olindi ✓");}catch(e){}}},"📋"),
       star));}
-
 function emptyDict(){
   return h("div",{class:"warn"},dictInfo.err||"Lug'at yuklanmoqda...",
     dictInfo.err?h("div",{style:"margin-top:8px"},"GitHub'da index.html turgan joyga lugat.xlsx faylini yuklang."):null);}
-
 function addHist(q){q=q.trim();if(!q)return;
   hist=hist.filter(x=>!(x.d===dir&&norm(x.q)===norm(q)));hist.unshift({d:dir,q});hist=hist.slice(0,50);save("hist",hist);}
+function setDir(d){dir=d;save("dir",dir);dirLabel();}
 
+/* ================= QIDIRUV ================= */
+function lettersGrid(onpick){
+  const g=h("div",{class:"letters"});
+  lettersOf(dir,visibleKeys(dir)).forEach(x=>g.append(h("button",{class:"lt",onclick:()=>onpick(x)},x)));return g;}
+function randomWord(){
+  const v=visibleKeys(dir);if(!v.length)return;
+  $("q").value=maps[dir].get(v[Math.floor(Math.random()*v.length)]).w;renderSearch();}
 function renderSearch(){
   const box=$("results");box.replaceChildren();
   if(!entries.length){box.append(emptyDict());return;}
   const q=$("q").value;
   if(!norm(q)){
-    box.append(h("div",{class:"hint"},LN[dir]+" so'z yozing yoki 🎤 bosing. Lug'atda "+keys[dir].length+" ta so'z bor."));
-    if(hist.length){box.append(h("div",{class:"sec-t"},"Oxirgi qidiruvlar"),
-      h("div",{class:"chips"},hist.slice(0,8).map(x=>h("button",{class:"chip",onclick:()=>{dir=x.d;save("dir",dir);dirLabel();$("q").value=x.q;renderSearch();}},x.q))));}
+    box.append(h("div",{class:"hint"},LN[dir]+"cha so'z yozing yoki 🎤 bosing. Lug'atda "+visibleKeys(dir).length+" ta so'z bor."),
+      h("button",{class:"btn sec",onclick:randomWord},"🎲 Tasodifiy so'z"),
+      h("div",{class:"sec-t"},"Harf bo'yicha qidirish"),
+      lettersGrid(x=>{letter=x;listShown=80;$("lf").value="";show("list");}));
+    if(hist.length)box.append(h("div",{class:"sec-t"},"Oxirgi qidiruvlar"),
+      h("div",{class:"chips"},hist.slice(0,8).map(x=>h("button",{class:"chip",onclick:()=>{setDir(x.d);$("q").value=x.q;renderSearch();}},x.q))));
     return;}
   const res=findKeys(dir,q);
   if(!res.length){
-    box.append(h("div",{class:"hint"},"«"+q.trim()+"» lug'atda topilmadi."));
+    box.append(h("div",{class:"hint"},"«"+q.trim()+"» topilmadi."));
     const alt=findKeys(other(dir),q);
-    if(alt.length)box.append(h("button",{class:"btn sec",onclick:()=>{dir=other(dir);save("dir",dir);dirLabel();renderSearch();}},"⇄ "+LN[other(dir)]+" bo'yicha "+alt.length+" ta natija bor"));
+    if(alt.length)box.append(h("button",{class:"btn sec",onclick:()=>{setDir(other(dir));renderSearch();}},"⇄ "+LN[other(dir)]+" tomondan "+alt.length+" ta natija bor"));
     return;}
   box.append(h("div",{class:"cnt"},res.length+" ta natija"));
-  res.forEach(k=>box.append(card(dir,k)));
-}
+  res.forEach(k=>box.append(card(dir,k)));}
 $("q").oninput=()=>{renderSearch();clearTimeout(histT);histT=setTimeout(()=>{if(findKeys(dir,$("q").value).length)addHist($("q").value);},1500);};
 $("q").onkeydown=e=>{if(e.key==="Enter"){e.target.blur();if($("q").value.trim())addHist($("q").value);}};
 $("mic").onclick=()=>{
@@ -260,15 +292,21 @@ $("mic").onclick=()=>{
   if(!R)return toast("Bu brauzerda ovoz yozish ishlamaydi");
   const r=new R();r.lang=LC[dir];
   r.onresult=e=>{$("q").value=e.results[0][0].transcript;renderSearch();addHist($("q").value);};
-  r.onerror=()=>toast("Mikrofon ishlamadi");r.onend=()=>{};
+  r.onerror=()=>toast("Mikrofon ishlamadi");
   r.start();toast("Tinglayapman...");};
 
-/* ================= LUG'AT RO'YXATI ================= */
+/* ================= LUG'AT RO'YXATI (harflar bo'yicha) ================= */
 function renderList(){
-  const box=$("lres");box.replaceChildren();
+  const box=$("lres"),L=$("letters");box.replaceChildren();L.replaceChildren();
   if(!entries.length){box.append(emptyDict());$("lcnt").textContent="";return;}
-  const f=norm($("lf").value),all=f?keys[dir].filter(k=>k.includes(f)):keys[dir];
-  $("lcnt").textContent=LN[dir]+" → "+LN[other(dir)]+": "+all.length+" ta so'z";
+  const base=visibleKeys(dir),letters=lettersOf(dir,base);
+  if(letter&&!letters.includes(letter))letter="";
+  L.append(h("button",{class:"lt"+(!letter?" act":""),onclick:()=>{letter="";listShown=80;renderList();}},"Hammasi"));
+  letters.forEach(x=>L.append(h("button",{class:"lt"+(letter===x?" act":""),onclick:()=>{letter=x;listShown=80;renderList();}},x)));
+  const f=norm($("lf").value);let all=base;
+  if(letter)all=all.filter(k=>letterOf(dir,k)===letter);
+  if(f)all=all.filter(k=>k.includes(f));
+  $("lcnt").textContent=LN[dir]+" → "+LN[other(dir)]+(letter?" · «"+letter+"» harfi":"")+": "+all.length+" ta so'z";
   all.slice(0,listShown).forEach(k=>box.append(card(dir,k)));
   if(all.length>listShown)box.append(h("button",{class:"btn sec",onclick:()=>{listShown+=80;renderList();}},"Ko'proq ko'rsatish ("+(all.length-listShown)+")"));}
 $("lf").oninput=()=>{listShown=80;renderList();};
@@ -283,8 +321,8 @@ function renderFav(){
 function renderHist(){
   const box=$("hres");box.replaceChildren();
   if(!hist.length){box.append(h("div",{class:"hint"},"Qidiruv tarixi bo'sh."));return;}
-  hist.forEach(x=>box.append(h("div",{class:"card",style:"cursor:pointer",onclick:()=>{dir=x.d;save("dir",dir);dirLabel();$("q").value=x.q;show("search");}},
-    h("div",{class:"w"},x.q),h("div",{class:"n"},LN[x.d]+" → "+LN[other(x.d)]))));
+  hist.forEach(x=>box.append(h("div",{class:"card",style:"cursor:pointer",onclick:()=>{setDir(x.d);$("q").value=x.q;show("search");}},
+    h("div",{class:"w"},x.q),h("div",{class:"cnt",style:"margin:4px 0 0"},LN[x.d]+" → "+LN[other(x.d)]))));
   box.append(h("button",{class:"btn sec",onclick:()=>{if(confirm("Tarixni tozalaysizmi?")){hist=[];save("hist",hist);renderHist();}}},"🗑 Tarixni tozalash"));}
 
 /* ================= SOZLAMA ================= */
@@ -292,7 +330,7 @@ function applyTheme(){
   const dark=theme==="dark"||(theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark",dark);
   document.documentElement.style.setProperty("--fs",fsz);}
-matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",applyTheme);
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);}catch(e){}
 function sel(opts,val,fn){const s=h("select",{});opts.forEach(([v,t])=>{const o=h("option",{value:v},t);if(String(v)===String(val))o.selected=true;s.append(o);});s.onchange=()=>fn(s.value);return s;}
 async function hardRefresh(){
   try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);
@@ -304,11 +342,13 @@ function renderSet(){
   box.append(
     h("div",{class:"sec-t"},"Lug'at"),
     h("div",{class:"card"},
-      h("div",{class:"kv"},h("span",{},"Qatorlar soni"),h("span",{},String(entries.length))),
+      h("div",{class:"kv"},h("span",{},"Jami qatorlar"),h("span",{},String(entries.length))),
       h("div",{class:"kv"},h("span",{},"Inglizcha so'zlar"),h("span",{},String(keys.en.length))),
       h("div",{class:"kv"},h("span",{},"O'zbekcha so'zlar"),h("span",{},String(keys.uz.length))),
       h("div",{class:"kv"},h("span",{},"Manba"),h("span",{},dictInfo.src==="fayl"?"lugat.xlsx":(dictInfo.src||"—"))),
       h("div",{class:"kv"},h("span",{},"Oxirgi yangilanish"),h("span",{},when))),
+    cats.length>1?h("div",{class:"sec-t"},"Lug'atlar (Excel varaqlari)"):null,
+    cats.length>1?h("div",{class:"card"},cats.map(c=>h("div",{class:"kv"},h("span",{},c),h("span",{},catCount[c]+" ta")))):null,
     dictInfo.err?h("div",{class:"warn"},dictInfo.err):null,
     h("button",{class:"btn",onclick:()=>loadDict(true)},"🔄 Lug'atni yangilash"),
     h("div",{class:"sec-t"},"Ko'rinish"),
@@ -319,12 +359,24 @@ function renderSet(){
     h("button",{class:"btn sec",onclick:()=>{if(confirm("Sevimlilarni tozalaysizmi?")){favs=[];save("favs",favs);toast("Tozalandi");}}},"⭐ Sevimlilarni tozalash"),
     h("button",{class:"btn sec",onclick:()=>{if(confirm("Tarixni tozalaysizmi?")){hist=[];save("hist",hist);toast("Tozalandi");}}},"🕘 Tarixni tozalash"),
     h("button",{class:"btn sec",onclick:hardRefresh},"♻️ Ilovani yangilash (keshni tozalash)"),
-    h("div",{class:"hint"},"Lug'at lugat.xlsx faylidan olinadi: A ustun — inglizcha, B ustun — o'zbekcha, C ustun — izoh (ixtiyoriy). Fayl yangilansa, ilova ochilganda internet orqali avtomatik yangilanadi va keyin internetsiz ham ishlaydi."));}
+    h("div",{class:"hint"},"Lug'at lugat.xlsx faylidan olinadi: A ustun — inglizcha, B ustun — o'zbekcha, C ustun — izoh (ixtiyoriy). Har bir Excel varag'i alohida lug'at hisoblanadi. Fayl yangilansa, ilova ochilganda internet orqali avtomatik yangilanadi va keyin internetsiz ham ishlaydi."));}
 
 /* ================= NAVIGATSIYA ================= */
 function dirLabel(){$("dirBtn").textContent=LN[dir]+" → "+LN[other(dir)]+" ⇄";}
-$("dirBtn").onclick=()=>{dir=other(dir);save("dir",dir);dirLabel();listShown=80;render();};
-function render(){({search:renderSearch,list:renderList,fav:renderFav,hist:renderHist,set:renderSet})[cur]();}
+function swapDir(){
+  let moved=false;
+  if(cur==="search"){const q=$("q").value;
+    if(norm(q)){const r=findKeys(dir,q);
+      if(r.length){const its=itemsOf(maps[dir].get(r[0]));if(its.length){$("q").value=its[0].t;moved=true;}}}}
+  setDir(other(dir));letter="";listShown=80;render();
+  if(moved)toast("So'z almashtirildi");}
+$("dirBtn").onclick=swapDir;
+function renderCats(){
+  const b=$("catBar");b.replaceChildren();
+  const on=cats.length>1&&(cur==="search"||cur==="list");b.hidden=!on;if(!on)return;
+  [["","Hammasi"],...cats.map(c=>[c,c])].forEach(([v,t])=>b.append(
+    h("button",{class:"chip"+(cat===v?" act":""),onclick:()=>{cat=v;save("cat",cat);letter="";listShown=80;render();}},t)));}
+function render(){renderCats();({search:renderSearch,list:renderList,fav:renderFav,hist:renderHist,set:renderSet})[cur]();}
 function show(v){cur=v;
   document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="v-"+v);
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("act",b.dataset.v===v));
@@ -335,7 +387,7 @@ document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.datase
 (async()=>{
   applyTheme();dirLabel();show("search");
   const c=await kvGet("dict");
-  if(c&&c.data&&c.data.length){entries=c.data;build();dictInfo={time:c.time,src:"saqlangan nusxa",err:""};render();}
+  if(c&&c.data&&c.data.length){entries=c.data.map(x=>({...x,c:x.c||"Umumiy"}));build();dictInfo={time:c.time,src:"saqlangan nusxa",err:""};render();}
   loadDict(false);
 })();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
