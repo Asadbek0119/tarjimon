@@ -196,12 +196,27 @@ async function translate(){
   const hit=(from==="en"?enMap:uzMap).get(norm(q));
   if(hit){$("out").textContent=hit.join("\n");$("tag").textContent="📖 Lug'atdan";$("msg").textContent="";return;}
   $("msg").textContent="Tarjima qilinmoqda...";
-  try{
+  const my=++reqId;
+  const res=await online(q);
+  if(my!==reqId)return;
+  if(!res){$("msg").textContent="Lug'atda topilmadi, internet ham yo'q.";return;}
+  $("out").textContent=res.text;
+  $("tag").textContent=res.sure?"🌐 Internetdan":"⚠️ Ishonchsiz natija. Lug'atga qo'shing";
+  $("msg").textContent="";
+}
+let reqId=0;
+async function online(q){
+  try{ // 1) Google (asosiy)
+    const r=await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl="+from+"&tl="+to+"&q="+encodeURIComponent(q));
+    const d=await r.json();
+    const t=d[0].map(x=>x[0]).join("");
+    if(t&&norm(t)!==norm(q))return{text:t,sure:true};
+  }catch(e){}
+  try{ // 2) MyMemory (zaxira)
     const r=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(q)+"&langpair="+from+"|"+to);
     const d=await r.json();
-    $("out").textContent=d.responseData.translatedText;
-    $("tag").textContent="🌐 Internetdan";$("msg").textContent="";
-  }catch(e){$("msg").textContent="Lug'atda topilmadi, internet ham yo'q.";}
+    return{text:d.responseData.translatedText,sure:(d.responseData.match||0)>=0.6};
+  }catch(e){return null;}
 }
 $("go").onclick=translate;
 $("src").oninput=()=>{clearTimeout(timer);timer=setTimeout(translate,500);};
